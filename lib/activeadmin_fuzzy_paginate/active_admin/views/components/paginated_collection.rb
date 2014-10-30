@@ -9,7 +9,9 @@ class ActiveAdmin::Views::PaginatedCollection
     text_node paginate(collection, options.symbolize_keys)
   end
 
-  def page_entries_info(options = {})
+  def page_entries_info_with_fuzzy_paginate(options = {})
+    return page_entries_info_without_fuzzy_paginate(options) unless active_admin_config.fuzzy_paginate
+
     if options[:entry_name]
       entry_name = options[:entry_name]
       entries_name = options[:entries_name]
@@ -26,19 +28,8 @@ class ActiveAdmin::Views::PaginatedCollection
     end
     entries_name = entry_name.pluralize unless entries_name
 
-    # Display a place holder for fuzzy counts
-    if active_admin_config.fuzzy_paginate
-      "Displaying results for #{entries_name}"
-    elsif collection.num_pages < 2
-      case collection.size
-      when 0; I18n.t('active_admin.pagination.empty', :model => entries_name)
-      when 1; I18n.t('active_admin.pagination.one', :model => entry_name)
-      else;   I18n.t('active_admin.pagination.one_page', :model => entries_name, :n => collection.total_count)
-      end
-    else
-      offset = collection.current_page * collection.size
-      total  = collection.total_count
-      I18n.t('active_admin.pagination.multiple', :model => entries_name, :from => (offset - collection.size + 1), :to => offset > total ? total : offset, :total => total)
-    end
+    "Displaying results for #{entries_name}"
   end
+  alias_method_chain :page_entries_info, :fuzzy_paginate
+
 end
